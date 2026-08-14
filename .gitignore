@@ -1,2 +1,5 @@
 .env
 node_modules
+server/seedData.js
+server/seedFieldEngineer.js
+server/seedUser.js
