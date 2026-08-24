@@ -10,6 +10,7 @@ const transformerRoutes = require("./routes/transformerRoutes");
 const consumerRoutes = require("./routes/consumerRoutes");
 const outageRoutes = require("./routes/outageRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
+const smartMeterRoutes = require("./routes/smartMeterRoutes");
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api/substations", substationRoutes);
 app.use("/api/feeders", feederRoutes);
 app.use("/api/transformers", transformerRoutes);
 app.use("/api/consumers", consumerRoutes);
+app.use("/api/smart-meters", smartMeterRoutes);
 app.use("/api/outages", outageRoutes);
 app.use("/api/tickets", ticketRoutes);
 
