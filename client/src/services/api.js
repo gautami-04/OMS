@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");
@@ -16,10 +17,13 @@ export const apiRequest = async (endpoint, options = {}) => {
     });
 
     if (response.status === 401) {
-      // Clear token on 401 unauthorized
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      if (window.location.pathname !== "/" && window.location.pathname !== "/login") {
+
+      if (
+        window.location.pathname !== "/" &&
+        window.location.pathname !== "/login"
+      ) {
         window.location.href = "/";
       }
     }
@@ -32,7 +36,11 @@ export const apiRequest = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error.message);
+    console.error(
+      `API Error [${endpoint}]:`,
+      error.message
+    );
+
     throw error;
   }
 };
@@ -44,10 +52,12 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(credentials),
     }),
+
   logout: () =>
     apiRequest("/auth/logout", {
       method: "POST",
     }),
+
   getUsers: () => apiRequest("/auth/users"),
 };
 
@@ -74,17 +84,22 @@ export const consumersApi = {
 // Smart Meters API
 export const smartMetersApi = {
   getAll: () => apiRequest("/smart-meters"),
-  getById: (id) => apiRequest(`/smart-meters/${id}`),
+
+  getById: (id) =>
+    apiRequest(`/smart-meters/${id}`),
+
   create: (data) =>
     apiRequest("/smart-meters", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
   update: (id, data) =>
     apiRequest(`/smart-meters/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+
   delete: (id) =>
     apiRequest(`/smart-meters/${id}`, {
       method: "DELETE",
@@ -93,36 +108,50 @@ export const smartMetersApi = {
 
 // Outages API
 export const outagesApi = {
-  getAll: () => apiRequest("/outages"),
+  getAll: () =>
+    apiRequest("/outages"),
+
   create: (data) =>
     apiRequest("/outages", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
   update: (id, data) =>
     apiRequest(`/outages/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+
   delete: (id) =>
     apiRequest(`/outages/${id}`, {
       method: "DELETE",
     }),
 };
 
+// Consumer Impact API
+export const consumerImpactApi = {
+  getByOutage: (outageId) =>
+    apiRequest(`/consumer-impact/${outageId}`),
+};
+
 // Tickets API
 export const ticketsApi = {
-  getAll: () => apiRequest("/tickets"),
+  getAll: () =>
+    apiRequest("/tickets"),
+
   create: (data) =>
     apiRequest("/tickets", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
   update: (id, data) =>
     apiRequest(`/tickets/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+
   delete: (id) =>
     apiRequest(`/tickets/${id}`, {
       method: "DELETE",

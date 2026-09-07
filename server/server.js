@@ -11,6 +11,7 @@ const consumerRoutes = require("./routes/consumerRoutes");
 const outageRoutes = require("./routes/outageRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const smartMeterRoutes = require("./routes/smartMeterRoutes");
+const consumerImpactRoutes = require("./routes/consumerImpactRoutes");
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/consumers", consumerRoutes);
 app.use("/api/smart-meters", smartMeterRoutes);
 app.use("/api/outages", outageRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/consumer-impact", consumerImpactRoutes);
 
 const PORT = process.env.PORT || 5000;
 
