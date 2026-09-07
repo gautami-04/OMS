@@ -5,7 +5,6 @@ import {
   Marker,
   Popup,
   Circle,
-  Polyline,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
@@ -23,12 +22,10 @@ import {
   consumerImpactApi,
 } from "../services/api";
 
-import { fetchCurrentWeather } from "../services/weatherService";
 
 import StatusBadge from "../components/StatusBadge";
 import LayerControl from "../components/LayerControl";
 import MapLegend from "../components/MapLegend";
-import WeatherOverlay from "../components/WeatherOverlay";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 
@@ -174,11 +171,6 @@ export default function GridMap() {
   const [impactLoading, setImpactLoading] = useState(false);
   const [impactError, setImpactError] = useState(null);
 
-  // Weather state
-  const [weather, setWeather] = useState(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState(null);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -191,42 +183,10 @@ export default function GridMap() {
     transformers: true,
     consumers: true,
     smartMeters: true,
-    weather: false,
     outages: true,
   });
 
   const [mapCenter] = useState([17.385, 78.4867]);
-
-  // ------------------------------------------------------------
-  // WEATHER
-  // ------------------------------------------------------------
-
-  const loadWeatherData = useCallback(async () => {
-    setWeatherLoading(true);
-    setWeatherError(null);
-
-    try {
-      const data = await fetchCurrentWeather(
-        17.385,
-        78.4867
-      );
-
-      setWeather(data);
-      setWeatherLoading(false);
-    } catch (err) {
-      console.error(
-        "Failed to load weather data:",
-        err
-      );
-
-      setWeatherError(
-        "Unable to retrieve current weather data."
-      );
-
-      setWeatherLoading(false);
-    }
-  }, []);
-
   // ------------------------------------------------------------
   // MAP DATA
   // ------------------------------------------------------------
@@ -289,12 +249,14 @@ export default function GridMap() {
   }, []);
 
   useEffect(() => {
-    loadMapData();
-    loadWeatherData();
-  }, [
-    loadMapData,
-    loadWeatherData,
-  ]);
+  const loadInitialData = async () => {
+    await Promise.all([
+      loadMapData(),
+    ]);
+  };
+
+  loadInitialData();
+}, [loadMapData]);
 
   // ------------------------------------------------------------
   // WEEK 6: CONSUMER IMPACT
@@ -336,6 +298,7 @@ export default function GridMap() {
   }, [selectedOutageId]);
 
   useEffect(() => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
     loadImpactData();
   }, [loadImpactData]);
 
@@ -401,16 +364,6 @@ export default function GridMap() {
     return affectedFeederIds.has(
       String(feederId)
     );
-  };
-
-  const getConsumerTransformerId = (consumer) => {
-    if (!consumer?.transformer) {
-      return null;
-    }
-
-    return typeof consumer.transformer === "object"
-      ? consumer.transformer._id
-      : consumer.transformer;
   };
 
   // ------------------------------------------------------------
@@ -517,15 +470,6 @@ export default function GridMap() {
         ...prev,
         [key]: !prev[key],
       };
-
-      if (
-        key === "weather" &&
-        updated.weather &&
-        !weather
-      ) {
-        loadWeatherData();
-      }
-
       return updated;
     });
   };
@@ -866,18 +810,6 @@ export default function GridMap() {
 
         <MapLegend />
 
-        {/* WEATHER OVERLAY */}
-        {layers.weather && (
-          <WeatherOverlay
-            weather={weather}
-            loading={weatherLoading}
-            error={weatherError}
-            onRefresh={
-              loadWeatherData
-            }
-          />
-        )}
-
         <MapContainer
           center={mapCenter}
           zoom={13}
@@ -903,235 +835,6 @@ export default function GridMap() {
                   impactFocusLocation
                 }
               />
-            )}
-
-          {/* ==================================================
-              WEATHER MAP INDICATOR
-          ================================================== */}
-
-          {layers.weather &&
-            weather && (
-              <>
-                <Circle
-                  center={[
-                    17.385,
-                    78.4867,
-                  ]}
-                  radius={2400}
-                  pathOptions={{
-                    color:
-                      weather.precipitation >
-                      0
-                        ? "#0284C7"
-                        : "#587900",
-                    fillColor:
-                      weather.precipitation >
-                      0
-                        ? "#0284C7"
-                        : "#C9DDAC",
-                    fillOpacity: 0.07,
-                    weight: 1,
-                    dashArray: "4, 4",
-                  }}
-                />
-
-                <Marker
-                  position={[
-                    17.388,
-                    78.483,
-                  ]}
-                  icon={L.divIcon({
-                    className:
-                      "custom-grid-marker",
-
-                    html: `
-                      <div style="
-                        background: rgba(255, 255, 255, 0.95);
-                        border: 1px solid var(--border-color, #DFE1D7);
-                        border-radius: 12px;
-                        padding: 3px 8px;
-                        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                        font-size: 11px;
-                        font-weight: 600;
-                        color: #202420;
-                        white-space: nowrap;
-                      ">
-                        <span>
-                          ☁️ ${weather.condition}
-                        </span>
-
-                        <span style="color: #6D746D;">
-                          •
-                        </span>
-
-                        <span>
-                          ${weather.temperature}°C
-                        </span>
-
-                        <span style="color: #6D746D;">
-                          •
-                        </span>
-
-                        <span style="color: #2563EB;">
-                          ${weather.windSpeed} km/h ${weather.windDirectionText}
-                        </span>
-                      </div>
-                    `,
-
-                    iconSize: [
-                      160,
-                      24,
-                    ],
-
-                    iconAnchor: [
-                      80,
-                      12,
-                    ],
-                  })}
-                >
-                  <Popup>
-                    <div
-                      style={{
-                        padding: "8px",
-                        minWidth:
-                          "160px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize:
-                            "12px",
-                          fontWeight: 700,
-                          color:
-                            "#1A2318",
-                          marginBottom:
-                            "4px",
-                        }}
-                      >
-                        Regional Weather
-                        Telemetry
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize:
-                            "11px",
-                          color:
-                            "#6D746D",
-                          marginBottom:
-                            "4px",
-                        }}
-                      >
-                        Grid Sector:{" "}
-                        <strong>
-                          Hyderabad
-                          Metropolitan
-                        </strong>
-                      </div>
-
-                      <div
-                        style={{
-                          background:
-                            "#F8FAF7",
-                          padding:
-                            "6px",
-                          borderRadius:
-                            "3px",
-                          fontSize:
-                            "11px",
-                          border:
-                            "1px solid #ECEEE5",
-                        }}
-                      >
-                        <div>
-                          Condition:{" "}
-                          <strong>
-                            {
-                              weather.condition
-                            }
-                          </strong>
-                        </div>
-
-                        <div>
-                          Temp:{" "}
-                          <strong>
-                            {
-                              weather.temperature
-                            }°C
-                          </strong>{" "}
-                          (Feels{" "}
-                          {
-                            weather.apparentTemperature
-                          }°C)
-                        </div>
-
-                        <div>
-                          Humidity:{" "}
-                          <strong>
-                            {
-                              weather.humidity
-                            }%
-                          </strong>
-                        </div>
-
-                        <div>
-                          Wind:{" "}
-                          <strong>
-                            {
-                              weather.windSpeed
-                            }{" "}
-                            km/h (
-                            {
-                              weather.windDirectionText
-                            }
-                            )
-                          </strong>
-                        </div>
-
-                        <div>
-                          Precipitation:{" "}
-                          <strong>
-                            {
-                              weather.precipitation
-                            }{" "}
-                            mm
-                          </strong>
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop:
-                              "3px",
-                          }}
-                        >
-                          Grid Status:{" "}
-                          <strong
-                            style={{
-                              color:
-                                weather.precipitation >
-                                  5 ||
-                                weather.weatherCode >=
-                                  95
-                                  ? "#DC2626"
-                                  : "#22C55E",
-                            }}
-                          >
-                            {weather.precipitation >
-                              5 ||
-                            weather.weatherCode >=
-                              95
-                              ? "Adverse Weather Alert"
-                              : "Grid Conditions Normal"}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              </>
             )}
 
           {/* ==================================================

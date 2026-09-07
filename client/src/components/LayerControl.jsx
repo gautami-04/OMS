@@ -1,4 +1,3 @@
-import React from "react";
 import { Layers } from "lucide-react";
 
 export function LayerControl({ layers, onToggleLayer }) {
@@ -8,7 +7,6 @@ export function LayerControl({ layers, onToggleLayer }) {
     { key: "transformers", label: "Transformers" },
     { key: "consumers", label: "Consumers" },
     { key: "smartMeters", label: "Smart Meters" },
-    { key: "weather", label: "Weather Overlay" },
     { key: "outages", label: "Outages / Faults" },
   ];
 

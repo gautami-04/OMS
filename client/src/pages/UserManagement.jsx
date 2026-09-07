@@ -28,6 +28,7 @@ export default function UserManagement({ user: currentUser }) {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
   }, [fetchUsers]);
 
