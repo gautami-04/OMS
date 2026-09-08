@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
 import {
   AlertTriangle,
   Zap,
@@ -22,13 +23,11 @@ import {
   outagesApi,
   ticketsApi,
 } from "../services/api";
-import { fetchCurrentWeather } from "../services/weatherService";
 
 import StatCard from "../components/StatCard";
 import StatusBadge from "../components/StatusBadge";
 import LayerControl from "../components/LayerControl";
 import MapLegend from "../components/MapLegend";
-import WeatherOverlay from "../components/WeatherOverlay";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 
@@ -54,10 +53,10 @@ const createGridIcon = (type, color) => {
           type === "substation"
             ? "⚡"
             : type === "outage"
-            ? "!"
-            : type === "transformer"
-            ? "T"
-            : "C"
+              ? "!"
+              : type === "transformer"
+                ? "T"
+                : "C"
         }
       </div>
     `,
@@ -112,11 +111,6 @@ export default function Dashboard() {
   const [outages, setOutages] = useState([]);
   const [tickets, setTickets] = useState([]);
 
-  // Weather state
-  const [weather, setWeather] = useState(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState(null);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -126,39 +120,33 @@ export default function Dashboard() {
     transformers: true,
     consumers: true,
     smartMeters: true,
-    weather: false,
     outages: true,
   });
 
   const [mapCenter] = useState([17.385, 78.4867]);
 
-  const loadWeatherData = useCallback(async () => {
-    setWeatherLoading(true);
-    setWeatherError(null);
-    try {
-      const data = await fetchCurrentWeather(17.385, 78.4867);
-      setWeather(data);
-      setWeatherLoading(false);
-    } catch (err) {
-      console.error("Dashboard weather fetch error:", err);
-      setWeatherError("Unable to retrieve current weather data.");
-      setWeatherLoading(false);
-    }
-  }, []);
+  const handleToggleLayer = (layer) => {
+    setLayers((prev) => ({
+      ...prev,
+      [layer]: !prev[layer],
+    }));
+  };
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const [sRes, fRes, tRes, cRes, mRes, oRes, tkRes] = await Promise.allSettled([
-        substationsApi.getAll(),
-        feedersApi.getAll(),
-        transformersApi.getAll(),
-        consumersApi.getAll(),
-        smartMetersApi.getAll(),
-        outagesApi.getAll(),
-        ticketsApi.getAll(),
-      ]);
+      const [sRes, fRes, tRes, cRes, mRes, oRes, tkRes] =
+        await Promise.allSettled([
+          substationsApi.getAll(),
+          feedersApi.getAll(),
+          transformersApi.getAll(),
+          consumersApi.getAll(),
+          smartMetersApi.getAll(),
+          outagesApi.getAll(),
+          ticketsApi.getAll(),
+        ]);
 
       if (sRes.status === "fulfilled") setSubstations(sRes.value || []);
       if (fRes.status === "fulfilled") setFeeders(fRes.value || []);
@@ -177,48 +165,67 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDashboardData();
-    loadWeatherData();
-  }, [fetchDashboardData, loadWeatherData]);
+  }, [fetchDashboardData]);
 
-  const handleToggleLayer = (key) => {
-    setLayers((prev) => {
-      const updated = { ...prev, [key]: !prev[key] };
-      if (key === "weather" && updated.weather && !weather) {
-        loadWeatherData();
-      }
-      return updated;
-    });
-  };
+  const activeOutagesCount = outages.filter(
+    (o) => o.status !== "Restored"
+  ).length;
 
-  const activeOutagesCount = outages.filter((o) => o.status !== "Restored").length;
-  const activeTickets = tickets.filter((t) => t.status !== "Closed" && t.status !== "Resolved");
+  const activeTickets = tickets.filter(
+    (t) => t.status !== "Closed" && t.status !== "Resolved"
+  );
+
   const fieldEngineersDispatched = new Set(
-    activeTickets.map((t) => (typeof t.fieldEngineer === "object" ? t.fieldEngineer?._id : t.fieldEngineer)).filter(Boolean)
+    activeTickets
+      .map((t) =>
+        typeof t.fieldEngineer === "object"
+          ? t.fieldEngineer?._id
+          : t.fieldEngineer
+      )
+      .filter(Boolean)
   ).size;
 
-  const onlineMetersCount = smartMeters.filter((m) => m.status === "Online").length;
+  const onlineMetersCount = smartMeters.filter(
+    (m) => m.status === "Online"
+  ).length;
 
-  const feederLines = feeders.map((feeder) => {
-    const matchedTransformers = transformers.filter(
-      (t) => (t.feeder?._id || t.feeder) === feeder._id && t.location?.latitude
-    );
-    const sub = substations.find(
-      (s) => s._id === (feeder.substation?._id || feeder.substation)
-    );
+  const feederLines = feeders
+    .map((feeder) => {
+      const matchedTransformers = transformers.filter(
+        (t) =>
+          (t.feeder?._id || t.feeder) === feeder._id &&
+          t.location?.latitude
+      );
 
-    if (sub && sub.location && matchedTransformers.length > 0) {
-      return matchedTransformers.map((trans) => [
-        [sub.location.latitude, sub.location.longitude],
-        [trans.location.latitude, trans.location.longitude],
-      ]);
-    }
-    return [];
-  }).flat();
+      const sub = substations.find(
+        (s) => s._id === (feeder.substation?._id || feeder.substation)
+      );
 
-  if (loading) return <LoadingState message="Loading Grid Control Dashboard..." />;
-  if (error) return <ErrorState message={error} onRetry={fetchDashboardData} />;
+      if (
+        sub &&
+        sub.location &&
+        matchedTransformers.length > 0
+      ) {
+        return matchedTransformers.map((trans) => [
+          [sub.location.latitude, sub.location.longitude],
+          [trans.location.latitude, trans.location.longitude],
+        ]);
+      }
 
+      return [];
+    })
+    .flat();
+
+  if (loading) {
+    return <LoadingState message="Loading Grid Control Dashboard..." />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={fetchDashboardData} />;
+  }
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {/* PAGE HEADER */}
@@ -229,7 +236,10 @@ export default function Dashboard() {
         </div>
 
         <div className="header-actions">
-          <button className="btn btn-secondary btn-sm" onClick={fetchDashboardData}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={fetchDashboardData}
+          >
             <RefreshCw size={12} /> Refresh Telemetry
           </button>
         </div>
@@ -240,36 +250,58 @@ export default function Dashboard() {
         <StatCard
           label="Active Outages"
           value={activeOutagesCount}
-          subtext={activeOutagesCount > 0 ? "Requires Operator Action" : "Grid Operating Normally"}
+          subtext={
+            activeOutagesCount > 0
+              ? "Requires Operator Action"
+              : "Grid Operating Normally"
+          }
           icon={AlertTriangle}
-          badge={<StatusBadge status={activeOutagesCount > 0 ? "In Progress" : "Optimal"} />}
+          badge={
+            <StatusBadge
+              status={activeOutagesCount > 0 ? "In Progress" : "Optimal"}
+            />
+          }
         />
+
         <StatCard
           label="Total Monitored Assets"
-          value={substations.length + feeders.length + transformers.length}
+          value={
+            substations.length +
+            feeders.length +
+            transformers.length
+          }
           subtext={`${substations.length} Substations, ${feeders.length} Feeders`}
           icon={Zap}
         />
+
         <StatCard
           label="Field Crews Dispatched"
           value={fieldEngineersDispatched}
           subtext={`${activeTickets.length} Active Dispatch Tickets`}
           icon={Users}
         />
+
         <StatCard
           label="Connected Consumers"
           value={consumers.length}
           subtext={`${smartMeters.length} Smart Meters Connected`}
           icon={Activity}
         />
+
         <StatCard
           label="Smart Meters"
           value={smartMeters.length}
-          subtext={`${onlineMetersCount} Online, ${smartMeters.filter(m => m.status === 'Offline').length} Offline`}
+          subtext={`${onlineMetersCount} Online, ${
+            smartMeters.filter((m) => m.status === "Offline").length
+          } Offline`}
           icon={Radio}
           badge={
             <StatusBadge
-              status={smartMeters.some((m) => m.status === "Offline") ? "Warning" : "Online"}
+              status={
+                smartMeters.some((m) => m.status === "Offline")
+                  ? "Warning"
+                  : "Online"
+              }
               label={`${onlineMetersCount}/${smartMeters.length} Online`}
             />
           }
@@ -284,95 +316,37 @@ export default function Dashboard() {
             <span className="panel-title">
               <Layers size={14} /> Real-Time GIS Network Canvas
             </span>
-            <span style={{ fontSize: "11px", color: "#6D746D" }}>
-              Live Layers: {Object.values(layers).filter(Boolean).length}
+
+            <span
+              style={{
+                fontSize: "11px",
+                color: "#6D746D",
+              }}
+            >
+              Live Layers:{" "}
+              {Object.values(layers).filter(Boolean).length}
             </span>
           </div>
 
           <div style={{ flex: 1, position: "relative" }}>
-            <LayerControl layers={layers} onToggleLayer={handleToggleLayer} />
+            <LayerControl
+              layers={layers}
+              onToggleLayer={handleToggleLayer}
+            />
+
             <MapLegend />
 
-            {/* WEATHER OVERLAY PANEL */}
-            {layers.weather && (
-              <WeatherOverlay
-                weather={weather}
-                loading={weatherLoading}
-                error={weatherError}
-                onRefresh={loadWeatherData}
-              />
-            )}
-
-            <MapContainer center={mapCenter} zoom={13} zoomControl={true}>
+            <MapContainer
+              center={mapCenter}
+              zoom={13}
+              zoomControl={true}
+            >
               <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://carto.com/">CARTO</a> OMS GIS'
-              />
-
-              {/* WEATHER MAP OPERATIONAL INDICATOR */}
-              {layers.weather && weather && (
-                <>
-                  <Circle
-                    center={[17.385, 78.4867]}
-                    radius={2400}
-                    pathOptions={{
-                      color: weather.precipitation > 0 ? "#0284C7" : "#587900",
-                      fillColor: weather.precipitation > 0 ? "#0284C7" : "#C9DDAC",
-                      fillOpacity: 0.07,
-                      weight: 1,
-                      dashArray: "4, 4",
-                    }}
-                  />
-                  <Marker
-                    position={[17.388, 78.483]}
-                    icon={L.divIcon({
-                      className: "custom-grid-marker",
-                      html: `
-                        <div style="
-                          background: rgba(255, 255, 255, 0.95);
-                          border: 1px solid var(--border-color, #DFE1D7);
-                          border-radius: 12px;
-                          padding: 3px 8px;
-                          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-                          display: flex;
-                          align-items: center;
-                          gap: 6px;
-                          font-size: 11px;
-                          font-weight: 600;
-                          color: #202420;
-                          white-space: nowrap;
-                        ">
-                          <span>☁️ ${weather.condition}</span>
-                          <span style="color: #6D746D;">•</span>
-                          <span>${weather.temperature}°C</span>
-                          <span style="color: #6D746D;">•</span>
-                          <span style="color: #2563EB;">${weather.windSpeed} km/h ${weather.windDirectionText}</span>
-                        </div>
-                      `,
-                      iconSize: [160, 24],
-                      iconAnchor: [80, 12],
-                    })}
-                  >
-                    <Popup>
-                      <div style={{ padding: "8px", minWidth: "160px" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#1A2318", marginBottom: "4px" }}>
-                          Regional Weather Telemetry
-                        </div>
-                        <div style={{ fontSize: "11px", color: "#6D746D", marginBottom: "4px" }}>
-                          Grid Sector: <strong>Hyderabad Metropolitan</strong>
-                        </div>
-                        <div style={{ background: "#F8FAF7", padding: "6px", borderRadius: "3px", fontSize: "11px", border: "1px solid #ECEEE5" }}>
-                          <div>Condition: <strong>{weather.condition}</strong></div>
-                          <div>Temp: <strong>{weather.temperature}°C</strong> (Feels {weather.apparentTemperature}°C)</div>
-                          <div>Humidity: <strong>{weather.humidity}%</strong></div>
-                          <div>Wind: <strong>{weather.windSpeed} km/h ({weather.windDirectionText})</strong></div>
-                          <div>Precipitation: <strong>{weather.precipitation} mm</strong></div>
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                </>
-              )}
+  url={`https://api.maptiler.com/maps/dataviz-v4/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`}
+  tileSize={512}
+  zoomOffset={-1}
+  attribution='&copy; MapTiler &copy; OpenStreetMap contributors'
+/>
 
               {/* FEEDERS LINE LAYER */}
               {layers.feeders &&
@@ -380,7 +354,12 @@ export default function Dashboard() {
                   <Polyline
                     key={idx}
                     positions={pts}
-                    pathOptions={{ color: "#2563EB", weight: 3, opacity: 0.75, dashArray: "6, 6" }}
+                    pathOptions={{
+                      color: "#2563EB",
+                      weight: 3,
+                      opacity: 0.75,
+                      dashArray: "6, 6",
+                    }}
                   />
                 ))}
 
@@ -390,16 +369,40 @@ export default function Dashboard() {
                   s.location?.latitude ? (
                     <Marker
                       key={s._id}
-                      position={[s.location.latitude, s.location.longitude]}
+                      position={[
+                        s.location.latitude,
+                        s.location.longitude,
+                      ]}
                       icon={icons.substation}
                     >
                       <Popup>
                         <div style={{ padding: "8px" }}>
-                          <strong style={{ fontSize: "13px", color: "#587900" }}>{s.name}</strong>
-                          <div style={{ fontSize: "11px", color: "#6D746D", marginTop: "4px" }}>
+                          <strong
+                            style={{
+                              fontSize: "13px",
+                              color: "#587900",
+                            }}
+                          >
+                            {s.name}
+                          </strong>
+
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#6D746D",
+                              marginTop: "4px",
+                            }}
+                          >
                             Code: <strong>{s.code}</strong>
                           </div>
-                          <div style={{ fontSize: "11px", color: "#202420", marginTop: "2px" }}>
+
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#202420",
+                              marginTop: "2px",
+                            }}
+                          >
                             Status: <StatusBadge status="Optimal" />
                           </div>
                         </div>
@@ -414,16 +417,34 @@ export default function Dashboard() {
                   t.location?.latitude ? (
                     <Marker
                       key={t._id}
-                      position={[t.location.latitude, t.location.longitude]}
+                      position={[
+                        t.location.latitude,
+                        t.location.longitude,
+                      ]}
                       icon={icons.transformer}
                     >
                       <Popup>
                         <div style={{ padding: "8px" }}>
-                          <strong style={{ fontSize: "13px" }}>{t.name}</strong>
-                          <div style={{ fontSize: "11px", color: "#6D746D", marginTop: "4px" }}>
+                          <strong style={{ fontSize: "13px" }}>
+                            {t.name}
+                          </strong>
+
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#6D746D",
+                              marginTop: "4px",
+                            }}
+                          >
                             Code: <strong>{t.code}</strong>
                           </div>
-                          <div style={{ fontSize: "11px", color: "#6D746D" }}>
+
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#6D746D",
+                            }}
+                          >
                             Feeder: {t.feeder?.name || "Connected"}
                           </div>
                         </div>
@@ -438,13 +459,24 @@ export default function Dashboard() {
                   c.location?.latitude ? (
                     <Marker
                       key={c._id}
-                      position={[c.location.latitude, c.location.longitude]}
+                      position={[
+                        c.location.latitude,
+                        c.location.longitude,
+                      ]}
                       icon={icons.consumer}
                     >
                       <Popup>
                         <div style={{ padding: "6px" }}>
-                          <strong style={{ fontSize: "12px" }}>{c.name}</strong>
-                          <div style={{ fontSize: "11px", color: "#6D746D" }}>
+                          <strong style={{ fontSize: "12px" }}>
+                            {c.name}
+                          </strong>
+
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#6D746D",
+                            }}
+                          >
                             Acc: {c.consumerNumber}
                           </div>
                         </div>
@@ -457,7 +489,15 @@ export default function Dashboard() {
               {layers.smartMeters &&
                 smartMeters.map((sm) => {
                   const loc = sm.consumer?.location;
-                  if (!loc || !loc.latitude || !loc.longitude) return null;
+
+                  if (
+                    !loc ||
+                    !loc.latitude ||
+                    !loc.longitude
+                  ) {
+                    return null;
+                  }
+
                   return (
                     <Marker
                       key={sm._id}
@@ -465,21 +505,97 @@ export default function Dashboard() {
                       icon={getSmartMeterIcon(sm.status)}
                     >
                       <Popup>
-                        <div style={{ padding: "8px", minWidth: "170px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px", gap: "8px" }}>
-                            <strong style={{ fontSize: "13px", color: "#1A2318" }}>{sm.meterNumber}</strong>
+                        <div
+                          style={{
+                            padding: "8px",
+                            minWidth: "170px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              marginBottom: "4px",
+                              gap: "8px",
+                            }}
+                          >
+                            <strong
+                              style={{
+                                fontSize: "13px",
+                                color: "#1A2318",
+                              }}
+                            >
+                              {sm.meterNumber}
+                            </strong>
+
                             <StatusBadge status={sm.status} />
                           </div>
-                          <div style={{ fontSize: "11px", color: "#6D746D", marginBottom: "4px" }}>
-                            Consumer: <strong>{sm.consumer?.name || "—"}</strong> ({sm.consumer?.consumerNumber || "—"})
+
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#6D746D",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            Consumer:{" "}
+                            <strong>
+                              {sm.consumer?.name || "—"}
+                            </strong>{" "}
+                            ({sm.consumer?.consumerNumber || "—"})
                           </div>
-                          <div style={{ background: "#F8FAF7", padding: "6px", borderRadius: "3px", fontSize: "11px", marginBottom: "4px", border: "1px solid #ECEEE5" }}>
-                            <div>Voltage: <strong>{sm.voltage != null ? sm.voltage + " V" : "—"}</strong></div>
-                            <div>Current: <strong>{sm.current != null ? sm.current + " A" : "—"}</strong></div>
-                            <div>Power: <strong>{sm.power != null ? sm.power + " kW" : "—"}</strong></div>
+
+                          <div
+                            style={{
+                              background: "#F8FAF7",
+                              padding: "6px",
+                              borderRadius: "3px",
+                              fontSize: "11px",
+                              marginBottom: "4px",
+                              border: "1px solid #ECEEE5",
+                            }}
+                          >
+                            <div>
+                              Voltage:{" "}
+                              <strong>
+                                {sm.voltage != null
+                                  ? sm.voltage + " V"
+                                  : "—"}
+                              </strong>
+                            </div>
+
+                            <div>
+                              Current:{" "}
+                              <strong>
+                                {sm.current != null
+                                  ? sm.current + " A"
+                                  : "—"}
+                              </strong>
+                            </div>
+
+                            <div>
+                              Power:{" "}
+                              <strong>
+                                {sm.power != null
+                                  ? sm.power + " kW"
+                                  : "—"}
+                              </strong>
+                            </div>
                           </div>
-                          <div style={{ fontSize: "10px", color: "#838A80" }}>
-                            Last Reading: {sm.lastReading ? new Date(sm.lastReading).toLocaleString() : "—"}
+
+                          <div
+                            style={{
+                              fontSize: "10px",
+                              color: "#838A80",
+                            }}
+                          >
+                            Last Reading:{" "}
+                            {sm.lastReading
+                              ? new Date(
+                                  sm.lastReading
+                                ).toLocaleString()
+                              : "—"}
                           </div>
                         </div>
                       </Popup>
@@ -489,18 +605,42 @@ export default function Dashboard() {
 
               {/* OUTAGES / FAULTS MARKERS */}
               {layers.outages &&
-                outages.map((o) => {
+                outages.map((o, index) => {
                   const tLoc = o.transformer?.location;
-                  const lat = tLoc?.latitude || 17.385 + (Math.random() - 0.5) * 0.01;
-                  const lng = tLoc?.longitude || 78.4867 + (Math.random() - 0.5) * 0.01;
+                  const lat =
+                    tLoc?.latitude ||
+                    17.385 + ((index % 5) - 2) * 0.002;
+                  const lng =
+                    tLoc?.longitude ||
+                    78.4867 + ((index % 5) - 2) * 0.002;
+
                   return (
-                    <Marker key={o._id} position={[lat, lng]} icon={icons.outage}>
+                    <Marker
+                      key={o._id}
+                      position={[lat, lng]}
+                      icon={icons.outage}
+                    >
                       <Popup>
                         <div style={{ padding: "8px" }}>
-                          <strong style={{ fontSize: "13px", color: "#DC2626" }}>{o.title}</strong>
-                          <div style={{ fontSize: "11px", color: "#6D746D", marginTop: "4px" }}>
+                          <strong
+                            style={{
+                              fontSize: "13px",
+                              color: "#DC2626",
+                            }}
+                          >
+                            {o.title}
+                          </strong>
+
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: "#6D746D",
+                              marginTop: "4px",
+                            }}
+                          >
                             Feeder: {o.feeder?.name || "N/A"}
                           </div>
+
                           <div style={{ marginTop: "4px" }}>
                             <StatusBadge status={o.status} />
                           </div>
@@ -518,29 +658,65 @@ export default function Dashboard() {
           <div className="event-feed-card">
             <div className="panel-header">
               <span className="panel-title">
-                <AlertTriangle size={14} style={{ color: "#DC2626" }} /> Real-Time Event Feed
+                <AlertTriangle
+                  size={14}
+                  style={{ color: "#DC2626" }}
+                />{" "}
+                Real-Time Event Feed
               </span>
-              <span style={{ fontSize: "11px", color: "#6D746D" }}>{outages.length} Events</span>
+
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: "#6D746D",
+                }}
+              >
+                {outages.length} Events
+              </span>
             </div>
 
             <div className="event-feed-list">
               {outages.length === 0 ? (
-                <div style={{ padding: "20px", color: "#6D746D", textAlign: "center" }}>
+                <div
+                  style={{
+                    padding: "20px",
+                    color: "#6D746D",
+                    textAlign: "center",
+                  }}
+                >
                   No grid outage events reported. System normal.
                 </div>
               ) : (
                 outages.slice(0, 8).map((o) => (
                   <div key={o._id} className="event-item">
                     <div className="event-item-header">
-                      <span className="event-item-title">{o.title}</span>
+                      <span className="event-item-title">
+                        {o.title}
+                      </span>
                       <StatusBadge status={o.status} />
                     </div>
+
                     <span className="event-item-desc">
-                      Feeder: {o.feeder?.name || "Grid Feeder"} {o.description ? `• ${o.description}` : ""}
+                      Feeder: {o.feeder?.name || "Grid Feeder"}{" "}
+                      {o.description
+                        ? `• ${o.description}`
+                        : ""}
                     </span>
+
                     <span className="event-item-time">
-                      <Clock size={10} style={{ display: "inline", marginRight: "3px" }} />
-                      {new Date(o.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      <Clock
+                        size={10}
+                        style={{
+                          display: "inline",
+                          marginRight: "3px",
+                        }}
+                      />
+                      {new Date(
+                        o.startTime
+                      ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
                 ))

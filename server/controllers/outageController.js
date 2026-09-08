@@ -38,6 +38,11 @@ const createOutage = async (req, res) => {
       status,
     });
 
+    req.app.get("io").emit("outage:changed", {
+      type: "created",
+      outageId: outage._id,
+    });
+
     res.status(201).json(outage);
   } catch (error) {
     console.error("Create outage error:", error.message);
@@ -47,7 +52,6 @@ const createOutage = async (req, res) => {
     });
   }
 };
-
 
 const updateOutage = async (req, res) => {
   try {
@@ -66,6 +70,11 @@ const updateOutage = async (req, res) => {
       });
     }
 
+    req.app.get("io").emit("outage:changed", {
+      type: "updated",
+      outageId: outage._id,
+    });
+
     res.status(200).json(outage);
   } catch (error) {
     console.error("Update outage error:", error.message);
@@ -79,23 +88,28 @@ const updateOutage = async (req, res) => {
 const deleteOutage = async (req, res) => {
   try {
     const outage = await PlannedOutage.findByIdAndDelete(req.params.id);
-    
+
     if (!outage) {
       return res.status(404).json({
         message: "Outage not found",
       });
     }
 
+    req.app.get("io").emit("outage:changed", {
+      type: "deleted",
+      outageId: outage._id,
+    });
+
     res.status(200).json({
       message: "Outage deleted successfully",
     });
-  }  catch (error) {
+  } catch (error) {
     console.error("Delete outage error:", error.message);
 
     res.status(500).json({
       message: "Server error",
     });
-  };
+  }
 };
 
 module.exports = {

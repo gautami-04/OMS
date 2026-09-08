@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { feedersApi, transformersApi, outagesApi } from "../services/api";
 
@@ -7,10 +7,8 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
   const [description, setDescription] = useState("");
   const [feederId, setFeederId] = useState("");
   const [transformerId, setTransformerId] = useState("");
-  const [startTime, setStartTime] = useState(new Date().toISOString().slice(0, 16));
-  const [endTime, setEndTime] = useState(
-    new Date(Date.now() + 2 * 3600 * 1000).toISOString().slice(0, 16)
-  );
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [status, setStatus] = useState("Scheduled");
 
   const [feeders, setFeeders] = useState([]);
@@ -18,25 +16,44 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchData();
-    }
-  }, [isOpen]);
-
   const fetchData = async () => {
     try {
-      const [fData, tData] = await Promise.all([feedersApi.getAll(), transformersApi.getAll()]);
+      const [fData, tData] = await Promise.all([
+        feedersApi.getAll(),
+        transformersApi.getAll(),
+      ]);
+
       setFeeders(fData);
       setTransformers(tData);
-      if (fData.length > 0) setFeederId(fData[0]._id);
+
+      if (fData.length > 0) {
+        setFeederId(fData[0]._id);
+      }
     } catch (err) {
       console.error("Failed to load feeders/transformers", err);
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStartTime(now.toISOString().slice(0, 16));
+
+      setEndTime(
+        new Date(now.getTime() + 2 * 3600 * 1000)
+          .toISOString()
+          .slice(0, 16)
+      );
+
+      fetchData();
+    }
+  }, [isOpen]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!title || !feederId) {
       setError("Title and Feeder are required");
       return;
@@ -55,11 +72,15 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
         endTime,
         status,
       });
+
       setLoading(false);
       setTitle("");
       setDescription("");
       onClose();
-      if (onSuccess) onSuccess();
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err) {
       setError(err.message || "Failed to create outage incident");
       setLoading(false);
@@ -73,10 +94,19 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
       title="Report New Incident / Outage"
       footer={
         <>
-          <button className="btn btn-secondary" onClick={onClose} disabled={loading}>
+          <button
+            className="btn btn-secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {loading ? "Creating..." : "Create Incident"}
           </button>
         </>
@@ -84,10 +114,18 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
     >
       <form onSubmit={handleSubmit}>
         {error && (
-          <div style={{ color: "#DC2626", fontSize: "12px", marginBottom: "10px", fontWeight: 600 }}>
+          <div
+            style={{
+              color: "#DC2626",
+              fontSize: "12px",
+              marginBottom: "10px",
+              fontWeight: 600,
+            }}
+          >
             {error}
           </div>
         )}
+
         <div className="form-group">
           <label>Incident Title *</label>
           <input
@@ -109,6 +147,7 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
             required
           >
             <option value="">Select Feeder</option>
+
             {feeders.map((f) => (
               <option key={f._id} value={f._id}>
                 {f.name} ({f.code})
@@ -125,6 +164,7 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
             onChange={(e) => setTransformerId(e.target.value)}
           >
             <option value="">None / Entire Feeder</option>
+
             {transformers.map((t) => (
               <option key={t._id} value={t._id}>
                 {t.name} ({t.code})
@@ -133,7 +173,13 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
           </select>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "10px",
+          }}
+        >
           <div className="form-group">
             <label>Start Time *</label>
             <input
@@ -144,6 +190,7 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
               required
             />
           </div>
+
           <div className="form-group">
             <label>Est. End Time *</label>
             <input
@@ -158,6 +205,7 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
 
         <div className="form-group">
           <label>Status *</label>
+
           <select
             className="form-control"
             value={status}
@@ -171,6 +219,7 @@ export default function NewIncidentModal({ isOpen, onClose, onSuccess }) {
 
         <div className="form-group">
           <label>Description / Root Cause</label>
+
           <textarea
             className="form-control"
             rows="3"

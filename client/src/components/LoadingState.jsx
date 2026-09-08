@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function LoadingState({ message = "Loading grid data..." }) {
   return (
     <div className="state-container">
