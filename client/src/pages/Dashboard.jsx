@@ -225,7 +225,7 @@ export default function Dashboard() {
   if (error) {
     return <ErrorState message={error} onRetry={fetchDashboardData} />;
   }
-
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {/* PAGE HEADER */}
@@ -342,9 +342,11 @@ export default function Dashboard() {
               zoomControl={true}
             >
               <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://carto.com/">CARTO</a> OMS GIS'
-              />
+  url={`https://api.maptiler.com/maps/dataviz-v4/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`}
+  tileSize={512}
+  zoomOffset={-1}
+  attribution='&copy; MapTiler &copy; OpenStreetMap contributors'
+/>
 
               {/* FEEDERS LINE LAYER */}
               {layers.feeders &&

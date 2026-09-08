@@ -537,6 +537,7 @@ export default function GridMap() {
         transformer.location;
     }
   }
+  const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
 
   return (
     <div
@@ -820,9 +821,11 @@ export default function GridMap() {
           }}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/">CARTO</a> OMS GIS'
-          />
+  url={`https://api.maptiler.com/maps/dataviz-v4/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`}
+  tileSize={512}
+  zoomOffset={-1}
+  attribution='&copy; MapTiler &copy; OpenStreetMap contributors'
+/>
 
           <MapFlyTo
             target={focusTarget}
