@@ -383,7 +383,7 @@ export default function Outages() {
           </button>
 
           <button
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary"
             onClick={handleOpenCreateForm}
           >
             <Plus size={14} /> Schedule New Outage

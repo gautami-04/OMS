@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { BarChart2, Zap, Clock, Activity, RefreshCw } from "lucide-react";
-import { outagesApi, feedersApi, consumersApi } from "../services/api";
+import { BarChart2, Clock, Activity, RefreshCw, Users, AlertTriangle } from "lucide-react";
+import { outagesApi, feedersApi, reportsApi } from "../services/api";
 
 import StatCard from "../components/StatCard";
 import StatusBadge from "../components/StatusBadge";
@@ -11,7 +11,7 @@ import ErrorState from "../components/ErrorState";
 export default function Reliability() {
   const [outages, setOutages] = useState([]);
   const [feeders, setFeeders] = useState([]);
-  const [consumers, setConsumers] = useState([]);
+  const [reliability, setReliability] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,15 +20,16 @@ export default function Reliability() {
     setLoading(true);
     setError(null);
     try {
-      const [oRes, fRes, cRes] = await Promise.all([
+      const [oRes, fRes, saidiRes, saifiRes] = await Promise.all([
         outagesApi.getAll(),
         feedersApi.getAll(),
-        consumersApi.getAll(),
+        reportsApi.getSaidi(),
+        reportsApi.getSaifi(),
       ]);
 
       setOutages(oRes || []);
       setFeeders(fRes || []);
-      setConsumers(cRes || []);
+      setReliability({ ...saidiRes, ...saifiRes });
       setLoading(false);
     } catch (err) {
       console.error("Reliability calculation error:", err);
@@ -42,25 +43,6 @@ export default function Reliability() {
     fetchReliabilityData();
   }, [fetchReliabilityData]);
 
-  // Derive SAIFI, SAIDI, CAIDI calculations
-  const totalConsumersCount = consumers.length || 1;
-  const totalOutagesCount = outages.length;
-
-  // Total interruption hours
-  let totalDurationHours = 0;
-  outages.forEach((o) => {
-    if (o.startTime && o.endTime) {
-      const durationMs = new Date(o.endTime) - new Date(o.startTime);
-      if (durationMs > 0) {
-        totalDurationHours += durationMs / (1000 * 3600);
-      }
-    }
-  });
-
-  const saifi = (totalOutagesCount / totalConsumersCount).toFixed(3);
-  const saidi = ((totalDurationHours * 60) / totalConsumersCount).toFixed(2);
-  const caidi = totalOutagesCount > 0 ? (totalDurationHours * 60 / totalOutagesCount).toFixed(1) : "0.0";
-
   // Feeder Outage Breakdown
   const feederAnalytics = feeders.map((feeder) => {
     const feederOutages = outages.filter(
@@ -72,7 +54,6 @@ export default function Reliability() {
       code: feeder.code,
       outageCount: feederOutages.length,
       activeCount: feederOutages.filter((o) => o.status !== "Restored").length,
-      reliabilityScore: feederOutages.length === 0 ? "100%" : feederOutages.length < 3 ? "98.5%" : "94.2%",
     };
   });
 
@@ -94,13 +75,6 @@ export default function Reliability() {
         />
       ),
     },
-    {
-      header: "RELIABILITY INDEX",
-      key: "reliabilityScore",
-      render: (r) => (
-        <strong style={{ color: "#587900" }}>{r.reliabilityScore}</strong>
-      ),
-    },
   ];
 
   if (loading) return <LoadingState message="Calculating Grid Reliability Performance (IEEE 1366 Indices)..." />;
@@ -112,7 +86,7 @@ export default function Reliability() {
       <div className="page-header">
         <div className="page-title">
           <h1>Reliability Performance Analytics</h1>
-          <p>IEEE 1366 Standard Grid Reliability Indices (SAIFI, SAIDI, CAIDI)</p>
+          <p>IEEE 1366 Standard Grid Reliability Indices (SAIFI and SAIDI)</p>
         </div>
 
         <div className="header-actions">
@@ -126,28 +100,33 @@ export default function Reliability() {
       <div className="stat-cards-grid">
         <StatCard
           label="SAIFI (Frequency)"
-          value={saifi}
-          subtext="Interrupts per Consumer"
+          value={reliability.saifi.toFixed(3)}
+          subtext="Interruptions per Consumer"
           icon={BarChart2}
         />
         <StatCard
           label="SAIDI (Duration)"
-          value={`${saidi} min`}
-          subtext="Outage Duration per Consumer"
+          value={`${reliability.saidi.toFixed(3)} hr`}
+          subtext="Interruption Hours per Consumer"
           icon={Clock}
         />
         <StatCard
-          label="CAIDI (Restoration)"
-          value={`${caidi} min`}
-          subtext="Avg. Restoration Time"
+          label="Total Consumers"
+          value={reliability.totalConsumers}
+          subtext="Consumers in the database"
+          icon={Users}
+        />
+        <StatCard
+          label="Affected Interruptions"
+          value={reliability.affectedConsumerInterruptions}
+          subtext="Consumer interruptions counted"
           icon={Activity}
         />
         <StatCard
-          label="Grid Availability"
-          value="99.92%"
-          subtext="System Availability Index"
-          icon={Zap}
-          badge={<StatusBadge status="Optimal" label="IEEE Benchmark" />}
+          label="Valid Outages"
+          value={reliability.outageCount}
+          subtext="Outages with valid duration"
+          icon={AlertTriangle}
         />
       </div>
 

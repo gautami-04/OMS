@@ -3,6 +3,26 @@ const Feeder = require("../models/Feeder");
 const Transformer = require("../models/Transformer");
 const Consumer = require("../models/Consumer");
 
+const getAffectedConsumers = async (outage) => {
+  if (outage.transformer) {
+    return Consumer.find({
+      transformer: outage.transformer._id || outage.transformer,
+    });
+  }
+
+  if (outage.feeder) {
+    const transformers = await Transformer.find({
+      feeder: outage.feeder._id || outage.feeder,
+    });
+
+    return Consumer.find({
+      transformer: { $in: transformers.map((transformer) => transformer._id) },
+    });
+  }
+
+  return [];
+};
+
 const getConsumerImpact = async (req, res) => {
   try {
     const { outageId } = req.params;
@@ -58,9 +78,9 @@ const getConsumerImpact = async (req, res) => {
       affectedTransformers = [transformer];
 
       // Find consumers connected to this transformer
-      affectedConsumers = await Consumer.find({
-        transformer: transformer._id,
-      }).populate("transformer");
+      affectedConsumers = await getAffectedConsumers(outage).then((consumers) =>
+        Consumer.populate(consumers, { path: "transformer" })
+      );
     }
 
     /*
@@ -79,14 +99,9 @@ const getConsumerImpact = async (req, res) => {
         feeder: feeder._id,
       }).populate("feeder");
 
-      const transformerIds = affectedTransformers.map(
-        (transformer) => transformer._id
+      affectedConsumers = await getAffectedConsumers(outage).then((consumers) =>
+        Consumer.populate(consumers, { path: "transformer" })
       );
-
-      // Find all consumers connected to those transformers
-      affectedConsumers = await Consumer.find({
-        transformer: { $in: transformerIds },
-      }).populate("transformer");
     }
 
     /*
@@ -177,4 +192,5 @@ const getConsumerImpact = async (req, res) => {
 
 module.exports = {
   getConsumerImpact,
+  getAffectedConsumers,
 };

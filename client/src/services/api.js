@@ -135,6 +135,12 @@ export const consumerImpactApi = {
     apiRequest(`/consumer-impact/${outageId}`),
 };
 
+// Reliability reports API
+export const reportsApi = {
+  getSaidi: () => apiRequest("/reports/saidi"),
+  getSaifi: () => apiRequest("/reports/saifi"),
+};
+
 // Tickets API
 export const ticketsApi = {
   getAll: () =>
