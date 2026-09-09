@@ -64,7 +64,7 @@ export default function Layout({ user, children }) {
             <Zap size={18} fill="#fff" />
           </div>
           <div className="brand-text">
-            <strong>GridControl OMS</strong>
+            <strong> OMS</strong>
             <small>Operations Center</small>
           </div>
         </div>

@@ -2,7 +2,7 @@ export default function MapLegend() {
   return (
     <div className="gis-map-legend">
       <div className="legend-item">
-        <div className="legend-color-dot" style={{ background: "#C9DDAC" }}></div>
+        <div className="legend-color-dot" style={{ background: "#A9C87C" }}></div>
         <span>Substation</span>
       </div>
       <div className="legend-item">

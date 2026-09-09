@@ -33,7 +33,7 @@ export default function Login({ onLogin }) {
             <Zap size={22} fill="#fff" />
           </div>
           <div>
-            <h2>GridControl OMS</h2>
+            <h2> OMS</h2>
             <p>Utility Grid Operations Center</p>
           </div>
         </div>
