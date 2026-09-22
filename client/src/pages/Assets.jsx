@@ -733,7 +733,7 @@ export default function Assets() {
 
               <div style={{ background: "#F8FAF7", padding: "10px", borderRadius: "4px", border: "1px solid var(--border-subtle)" }}>
                 <strong style={{ color: "#6D746D", fontSize: "11px", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                  Live Telemetry Metrics
+                  Recorded Electrical Metrics
                 </strong>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
                   <div>
