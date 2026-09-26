@@ -135,7 +135,7 @@ export default function Login({ onLogin }) {
           <div className="login-card-stitch">
             <div className="login-header-stitch">
               <div className="stitch-brand-logo">
-                <Zap size={20} fill="#4A7C59" color="#4A7C59" />
+                <Zap size={20} fill="var(--brand-green)" color="var(--brand-green)" />
               </div>
               <h1 className="login-title-stitch">Welcome Back</h1>
               <p className="login-subtitle-stitch">Sign in to access Smart Grid OMS</p>

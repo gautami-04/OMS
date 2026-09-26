@@ -62,7 +62,7 @@
 .visual-brand-icon {
   width: 44px;
   height: 44px;
-  background: #4A7C59;
+  background: var(--brand-green);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -236,7 +236,7 @@
 .stitch-brand-logo {
   width: 36px;
   height: 36px;
-  background: #EBF3E0;
+  background: var(--brand-green-soft);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -327,7 +327,7 @@
 }
 
 .input-control-stitch:focus {
-  border-color: #4A7C59;
+  border-color: var(--brand-green);
   box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.12);
 }
 
@@ -347,7 +347,7 @@
 }
 
 .checkbox-container input {
-  accent-color: #4A7C59;
+  accent-color: var(--brand-green);
   cursor: pointer;
 }
 
@@ -359,7 +359,7 @@
 .forgot-password-link {
   background: transparent;
   border: none;
-  color: #4A7C59;
+  color: var(--brand-green);
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
@@ -373,9 +373,9 @@
 .btn-signin-primary {
   width: 100%;
   padding: 11px;
-  background-color: #4A7C59;
+  background-color: var(--brand-green);
   color: #FFFFFF;
-  border: 1px solid #3B6243;
+  border: 1px solid var(--brand-green-hover);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
@@ -386,7 +386,7 @@
 }
 
 .btn-signin-primary:hover {
-  background-color: #3B6243;
+  background-color: var(--brand-green-hover);
 }
 
 .btn-signin-primary:disabled {
