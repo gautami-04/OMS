@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Download, Play } from "lucide-react";
-import { outagesApi, consumersApi } from "../services/api";
+import { outagesApi, consumersApi, reportsApi } from "../services/api";
+import { exportReportPDF } from "../utils/reportPdfGenerator";
 
 import StatusBadge from "../components/StatusBadge";
 import DataTable from "../components/DataTable";
@@ -14,6 +15,7 @@ export default function Reports() {
 
   const [outages, setOutages] = useState([]);
   const [consumers, setConsumers] = useState([]);
+  const [reliability, setReliability] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -40,9 +42,15 @@ export default function Reports() {
     setLoading(true);
     setError(null);
     try {
-      const [oRes, cRes] = await Promise.all([outagesApi.getAll(), consumersApi.getAll()]);
+      const [oRes, cRes, saidiRes, saifiRes] = await Promise.all([
+        outagesApi.getAll(),
+        consumersApi.getAll(),
+        reportsApi.getSaidi(),
+        reportsApi.getSaifi(),
+      ]);
       setOutages(oRes || []);
       setConsumers(cRes || []);
+      setReliability({ ...saidiRes, ...saifiRes });
       setLoading(false);
     } catch {
       setError("Failed to load operational report metrics");
@@ -68,6 +76,14 @@ export default function Reports() {
     setGeneratedMessage(`Report "${newRep.name}" compiled successfully based on database records.`);
   };
 
+  const handleExportPDF = (report) => {
+    try {
+      exportReportPDF(report, { outages, consumers, reliability });
+    } catch (err) {
+      alert(`Failed to export report PDF: ${err.message}`);
+    }
+  };
+
   const columns = [
     { header: "REPORT ID", key: "id", render: (r) => <strong>{r.id}</strong> },
     { header: "REPORT NAME", key: "name" },
@@ -85,9 +101,9 @@ export default function Reports() {
       render: (r) => (
         <button
           className="btn btn-secondary btn-sm"
-          onClick={() => alert(`Exporting data file for ${r.name}...`)}
+          onClick={() => handleExportPDF(r)}
         >
-          <Download size={12} /> Export CSV
+          <Download size={12} /> Export PDF
         </button>
       ),
     },
@@ -186,14 +202,16 @@ export default function Reports() {
               <strong style={{ fontSize: "14px" }}>{consumers.length}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #E8ECE7", paddingBottom: "8px" }}>
-              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Est. SAIFI Index</span>
+              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>SAIFI Index</span>
               <strong style={{ fontSize: "14px", color: "#587900" }}>
-                {outages.length > 0 ? (outages.length / (consumers.length || 1)).toFixed(2) : "0.00"} interrupts/cust
+                {reliability.saifi.toFixed(3)} interrupts/cust
               </strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>System Uptime Status</span>
-              <StatusBadge status="Optimal" label="99.94% Normal" />
+              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>SAIDI Index</span>
+              <strong style={{ fontSize: "14px", color: "#587900" }}>
+                {reliability.saidi.toFixed(3)} hours/cust
+              </strong>
             </div>
           </div>
         </div>

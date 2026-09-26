@@ -1,16 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  --brand-green: #4A7C59;
+  --brand-green-hover: #3B6243;
+  --brand-green-soft: #EBF3E0;
+  --brand-green-border: #B0C792;
+
   --bg-sidebar: #F7F7F2;
   --bg-sidebar-hover: #EBECE5;
-  --bg-sidebar-active: #C9DDAC;
+  --bg-sidebar-active: var(--brand-green);
   --sidebar-text: #525850;
   --sidebar-text-active: #1A2318;
   
-  --primary-green: #C9DDAC;
-  --primary-green-hover: #B7CC9A;
-  --primary-green-soft: #EBF3E0;
-  --primary-green-border: #B0C792;
+  --primary-green: var(--brand-green);
+  --primary-green-hover: var(--brand-green-hover);
+  --primary-green-soft: var(--brand-green-soft);
+  --primary-green-border: var(--brand-green-border);
 
   --bg-workspace: #F2F3ED;
   --bg-card: #FFFFFF;
@@ -42,9 +47,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html, body {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   font-family: var(--font-family);
@@ -53,6 +58,11 @@ html, body, #root {
   font-size: 13px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100%;
 }
 
 button {

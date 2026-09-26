@@ -96,7 +96,7 @@ const getSmartMeterIcon = (status) => {
 };
 
 const icons = {
-  substation: createGridIcon("substation", "#C9DDAC"),
+  substation: createGridIcon("substation", "#A9C87C"),
   transformer: createGridIcon("transformer", "#D97706"),
   consumer: createGridIcon("consumer", "#2563EB"),
   outage: createGridIcon("outage", "#DC2626"),
@@ -232,7 +232,7 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
       <div className="page-header">
         <div className="page-title">
           <h1>GIS Grid Operations Center</h1>
-          <p>Real-time Smart Grid Outage & Telemetry Monitor</p>
+          <p>Smart Grid Outage & Electrical Readings Monitor</p>
         </div>
 
         <div className="header-actions">
@@ -240,7 +240,7 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
             className="btn btn-secondary btn-sm"
             onClick={fetchDashboardData}
           >
-            <RefreshCw size={12} /> Refresh Telemetry
+            <RefreshCw size={12} /> Refresh Data
           </button>
         </div>
       </div>
@@ -314,7 +314,7 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
         <div className="dashboard-map-panel">
           <div className="panel-header">
             <span className="panel-title">
-              <Layers size={14} /> Real-Time GIS Network Canvas
+              <Layers size={14} /> GIS Network Canvas
             </span>
 
             <span

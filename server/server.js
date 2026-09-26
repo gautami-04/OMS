@@ -13,6 +13,7 @@ const outageRoutes = require("./routes/outageRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const smartMeterRoutes = require("./routes/smartMeterRoutes");
 const consumerImpactRoutes = require("./routes/consumerImpactRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 
 const { Server } = require("socket.io");
 
@@ -57,6 +58,7 @@ app.use("/api/smart-meters", smartMeterRoutes);
 app.use("/api/outages", outageRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/consumer-impact", consumerImpactRoutes);
+app.use("/api/reports", reportRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -107,7 +107,7 @@ const getSmartMeterIcon = (status, highlighted = false) => {
 };
 
 const icons = {
-  substation: createGridIcon("substation", "#C9DDAC"),
+  substation: createGridIcon("substation", "#A9C87C"),
   transformer: createGridIcon("transformer", "#D97706"),
   consumer: createGridIcon("consumer", "#2563EB"),
   outage: createGridIcon("outage", "#DC2626"),
