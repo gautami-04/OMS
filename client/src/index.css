@@ -42,9 +42,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html, body {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   font-family: var(--font-family);
@@ -53,6 +53,11 @@ html, body, #root {
   font-size: 13px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100%;
 }
 
 button {

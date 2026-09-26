@@ -10,6 +10,7 @@ import "./App.css";
 
 import Layout from "./components/Layout";
 
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import GridMap from "./pages/GridMap";
@@ -42,16 +43,21 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* PUBLIC AUTH ROUTE */}
+        {/* PUBLIC LANDING & AUTH ROUTES */}
         <Route
           path="/"
           element={
             user ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              <Login onLogin={setUser} />
+              <Landing user={user} />
             )
           }
+        />
+
+        <Route
+          path="/landing"
+          element={<Landing user={user} />}
         />
 
         <Route
@@ -64,6 +70,11 @@ function App() {
             )
           }
         />
+
+        {/* COMPATIBILITY ALIAS ROUTES */}
+        <Route path="/grid-map" element={<Navigate to="/map" replace />} />
+        <Route path="/crew-tickets" element={<Navigate to="/crew" replace />} />
+        <Route path="/user-management" element={<Navigate to="/users" replace />} />
 
         {/* PROTECTED APP ROUTES */}
         <Route

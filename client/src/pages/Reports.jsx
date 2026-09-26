@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Download, Play } from "lucide-react";
 import { outagesApi, consumersApi, reportsApi } from "../services/api";
+import { exportReportPDF } from "../utils/reportPdfGenerator";
 
 import StatusBadge from "../components/StatusBadge";
 import DataTable from "../components/DataTable";
@@ -75,6 +76,14 @@ export default function Reports() {
     setGeneratedMessage(`Report "${newRep.name}" compiled successfully based on database records.`);
   };
 
+  const handleExportPDF = (report) => {
+    try {
+      exportReportPDF(report, { outages, consumers, reliability });
+    } catch (err) {
+      alert(`Failed to export report PDF: ${err.message}`);
+    }
+  };
+
   const columns = [
     { header: "REPORT ID", key: "id", render: (r) => <strong>{r.id}</strong> },
     { header: "REPORT NAME", key: "name" },
@@ -92,9 +101,9 @@ export default function Reports() {
       render: (r) => (
         <button
           className="btn btn-secondary btn-sm"
-          onClick={() => alert(`Exporting data file for ${r.name}...`)}
+          onClick={() => handleExportPDF(r)}
         >
-          <Download size={12} /> Export CSV
+          <Download size={12} /> Export PDF
         </button>
       ),
     },
