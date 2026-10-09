@@ -1,277 +1,338 @@
 # Smart Grid Outage Management System (OMS)
 
-Full-stack web-based **Smart Grid Outage Management System (OMS)** designed for electrical distribution utilities. The system enables geospatial grid monitoring, planned outage lifecycle management, automated consumer impact analysis, field crew ticketing, IEEE 1366 reliability performance calculation (SAIFI & SAIDI), and role-based operational workflows.
+A full-stack **Smart Grid Outage Management System (OMS)** developed to support planned power outage monitoring, GIS-based grid visualization, consumer impact analysis, field maintenance workflows, and electricity distribution reliability reporting.
 
----
+The application uses React, Leaflet, Node.js, Express.js, MongoDB, JWT authentication, and Socket.IO to provide a centralized interface for managing grid assets and outage records.
 
-## ⚡ Problem Statement & Overview
+##  Problem Statement
 
-Modern electrical power distribution networks require instantaneous visibility into network disruptions, planned maintenance schedules, and equipment status across multi-tiered topologies (Substations $\rightarrow$ Feeders $\rightarrow$ Transformers $\rightarrow$ Consumers $\rightarrow$ Smart Meters).
+Electrical distribution networks require effective coordination of grid infrastructure, planned maintenance, outage records, and affected consumers. Maintaining this information across disconnected systems can make outage tracking, consumer impact assessment, and reliability reporting more difficult.
 
-Traditional utility management suffers from fragmented records, delayed impact calculation, and manual reliability index calculation. This Smart Grid OMS delivers a centralized operations hub providing:
-- Geospatial mapping of grid topology and fault perimeters.
-- Automated downstream consumer and asset impact tracing when outages occur.
-- Exact IEEE 1366 grid reliability calculations (SAIDI and SAIFI) computed directly against recorded operational data.
-- Incident ticketing and field engineer dispatch workflows.
-- Outage event broadcasting using Socket.IO.
+This project addresses these challenges through a centralized web application that brings grid asset visualization, outage lifecycle management, consumer impact analysis, and reliability calculations into one system.
 
----
+##  Key Features
 
-## 🛠️ Technology Stack
+### 1. Authentication and User Access
+- JWT-based user authentication.
+- Password hashing using bcryptjs.
+- Role-oriented application navigation and access workflows.
+- User management interface for viewing system accounts.
 
-| Layer | Technology | Details |
-|---|---|---|
-| **Frontend Framework** | React 19 (Vite) | Single Page Application with React Router v7 |
-| **GIS / Mapping** | Leaflet & React-Leaflet | Interactive MapTiler tile layers, custom SVG/DivIcon markers, dynamic impact radii |
-| **Styling & Design** | Modern CSS Design System | Curated utility palette, glassmorphism, responsive data cards, accessibility |
-| **Icons** | Lucide React | Modern SVG icons |
-| **Backend Runtime** | Node.js & Express.js | RESTful API server with modular controllers & routers |
-| **Database** | MongoDB Atlas / Mongoose ODM | Relational schema modeling with references and population |
-| **Authentication** | JSON Web Tokens (JWT) & bcryptjs | Stateless authorization with role-based access control (RBAC) |
-| **Real-Time Engine** | Socket.IO (v4) | Outage event broadcasting (`outage:changed`) |
+### 2. Operations Dashboard
+- Overview of grid assets and outage records.
+- Summary cards for key operational information.
+- Quick access to grid mapping, outages, tickets, and reports.
 
----
+### 3. GIS-Based Grid Visualization
+- Interactive maps powered by Leaflet and React-Leaflet.
+- Visualization of substations, feeders, transformers, consumers, smart meters, and outage locations where data is available.
+- Map navigation and search functionality.
+- Spatial representation of affected grid areas.
 
-## 📦 System Modules
+### 4. Planned Outage Management
+- Create, view, update, and delete planned outage records.
+- Track outages through `Scheduled`, `In Progress`, and `Restored` states.
+- Maintain outage information for operational monitoring and reporting.
 
-1. **Authentication & RBAC**: Secure JWT-based login supporting `Administrator`, `Operator`, and `Field Engineer` roles.
-2. **Operations Dashboard**: Executive overview featuring grid health status, key performance counters, mini GIS map, and active outages.
-3. **GIS Grid Map**: Interactive spatial network view supporting layer toggles (Substations, Feeders, Transformers, Consumers, Smart Meters, Active Outages), asset search with map fly-to, and visual fault blast zones.
-4. **Planned Outage Management**: End-to-end outage lifecycle tracking across `Scheduled`, `In Progress`, and `Restored` states.
-5. **Asset Registry**: Centralized inventory of grid infrastructure with Smart meter status and recorded electrical readings and CRUD operations on Smart Meters.
-6. **Consumer Impact Analysis**: Automated topological graph traversal that identifies all downstream transformers, feeders, and consumers interrupted by an outage.
-7. **Crew & Incident Tickets**: Field engineer dispatch management, ticket status transitions (`Open`, `In Progress`, `Resolved`), and outage linking.
-8. **Reliability Analysis (IEEE 1366)**: Automated computation of **SAIDI** and **SAIFI** indices computed from database outage duration and customer counts.
-9. **Reports & Analytics**: Operational reporting center with report compilation forms, grid reliability previews, and export workflows.
-10. **User Management**: Administrator-restricted portal for viewing system accounts and role assignments.
-11. **Socket.IO Real-Time Updates**: Outage event broadcasting using Socket.IO across connected operator screens.
+### 5. Grid Asset Registry
+- View grid infrastructure across the distribution hierarchy.
+- Retrieve substation, feeder, transformer, and consumer information.
+- Manage smart meter records and their stored readings and status information.
 
----
+### 6. Consumer Impact Analysis
+- Identify consumers associated with affected grid infrastructure.
+- Trace downstream assets to estimate the impact of an outage.
+- Display affected consumers, feeders, and transformers where the available asset relationships support the analysis.
 
-## 📐 Reliability Formulations (IEEE 1366)
+### 7. Crew and Maintenance Tickets
+- Create and manage maintenance tickets.
+- Track ticket progress through `Open`, `In Progress`, and `Resolved` states.
+- Associate tickets with relevant outage or maintenance information.
 
-The system computes grid reliability performance metrics in accordance with the IEEE 1366 standard:
+### 8. Reliability Analysis
+The system calculates two key distribution reliability indicators using outage and consumer data:
 
-### 1. System Average Interruption Duration Index (SAIDI)
-Measures the total duration of interruption for the average customer served during a specified period (in hours/customer):
+- **SAIDI:** System Average Interruption Duration Index.
+- **SAIFI:** System Average Interruption Frequency Index.
 
-$$\text{SAIDI} = \frac{\sum (N_i \times U_i)}{N_T}$$
+The calculation logic excludes outages with invalid or non-positive durations where applicable.
+
+### 9. Reports and Analytics
+- Access operational and reliability reporting features.
+- Review calculated reliability indicators.
+- Generate and export reports through the reporting interface.
+
+### 10. Outage Event Broadcasting
+- Socket.IO broadcasts outage change events from the backend.
+- Connected clients can receive outage events for integration with operational interfaces.
+
+> **Note:** Smart meter readings are application-stored data. The system does not provide direct physical smart meter telemetry or SCADA integration.
+
+##  Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, JavaScript |
+| GIS and Mapping | Leaflet, React-Leaflet, MapTiler |
+| Styling | CSS |
+| Icons | Lucide React |
+| Backend | Node.js, Express.js |
+| Database | MongoDB, Mongoose |
+| Authentication | JWT, bcryptjs |
+| Real-Time Communication | Socket.IO |
+| API Communication | REST APIs |
+| Development Tools | Git, GitHub, VS Code, npm |
+
+##  Reliability Calculations
+
+### System Average Interruption Duration Index (SAIDI)
+
+SAIDI represents the average interruption duration per consumer over the period represented by the available data.
+
+\[
+\text{SAIDI}=\frac{\sum(N_i \times U_i)}{N_T}
+\]
 
 Where:
-- $N_i$ = Number of affected consumers for outage $i$
-- $U_i$ = Outage duration in hours ($(\text{endTime} - \text{startTime}) / 3600000$)
-- $N_T$ = Total number of consumers registered in the grid database
 
-### 2. System Average Interruption Frequency Index (SAIFI)
-Measures the average number of sustained interruptions that a customer experiences (in interruptions/customer):
+- \(N_i\) = Number of consumers affected by outage \(i\).
+- \(U_i\) = Duration of outage \(i\), in hours.
+- \(N_T\) = Total number of consumers in the system's dataset.
 
-$$\text{SAIFI} = \frac{\sum N_i}{N_T}$$
+**Unit:** Hours per consumer.
+
+### System Average Interruption Frequency Index (SAIFI)
+
+SAIFI represents the average number of interruptions per consumer over the period represented by the available data.
+
+\[
+\text{SAIFI}=\frac{\sum N_i}{N_T}
+\]
 
 Where:
-- $N_i$ = Number of affected consumers for outage $i$
-- $N_T$ = Total number of consumers registered in the grid database
 
-*Note: Outages with non-positive or invalid durations are safely excluded from indices calculation.*
+- \(N_i\) = Number of consumers affected by outage \(i\).
+- \(N_T\) = Total number of consumers in the system's dataset.
 
----
+**Unit:** Interruptions per consumer.
 
-## 📁 Project Structure
+**Important:** These formulas describe the implemented calculation approach. The accuracy and interpretation of the resulting metrics depend on the completeness of outage durations, affected-consumer counts, and the reporting period represented by the stored data.
 
-```
-Smart-grid-oms/
-├── client/                      # React frontend application (Vite)
-│   ├── public/                  # Public assets
+## Project Structure
+
+```text
+OMS/
+├── client/
+│   ├── public/
 │   ├── src/
-│   │   ├── assets/              # Static styling assets
-│   │   ├── components/          # Reusable UI components (DataTable, Modal, StatCard, etc.)
-│   │   ├── pages/               # Application route views (Dashboard, GridMap, Outages, etc.)
-│   │   ├── services/            # API client (api.js) and Socket.IO client (socket.js)
-│   │   ├── App.css              # Design system styling & CSS variables
-│   │   ├── App.jsx              # Routing & role protection logic
-│   │   ├── index.css            # Base typography & layout styles
-│   │   └── main.jsx             # React DOM entry point
-│   ├── .env                     # Frontend environment variables
-│   ├── package.json             # Frontend dependencies and scripts
-│   └── vite.config.js           # Vite configuration
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
 │
-├── server/                      # Node.js Express backend API
+├── server/
 │   ├── config/
-│   │   └── db.js                # MongoDB Mongoose connection handler
-│   ├── controllers/             # Business logic controllers
-│   │   ├── authController.js
-│   │   ├── consumerController.js
-│   │   ├── consumerImpactController.js
-│   │   ├── feederController.js
-│   │   ├── outageController.js
-│   │   ├── reliabilityController.js
-│   │   ├── smartMeterController.js
-│   │   ├── substationController.js
-│   │   ├── ticketController.js
-│   │   └── transformerController.js
+│   │   └── db.js
+│   ├── controllers/
 │   ├── middleware/
-│   │   └── authMiddleware.js    # JWT verification & role authorization
-│   ├── models/                  # Mongoose schema models
-│   │   ├── Consumer.js
-│   │   ├── Feeder.js
-│   │   ├── PlannedOutage.js
-│   │   ├── SmartMeter.js
-│   │   ├── Substation.js
-│   │   ├── Ticket.js
-│   │   ├── Transformer.js
-│   │   └── User.js
-│   ├── routes/                  # Express route definitions
-│   │   ├── authRoutes.js
-│   │   ├── consumerImpactRoutes.js
-│   │   ├── consumerRoutes.js
-│   │   ├── feederRoutes.js
-│   │   ├── outageRoutes.js
-│   │   ├── reportRoutes.js
-│   │   ├── smartMeterRoutes.js
-│   │   ├── substationRoutes.js
-│   │   ├── ticketRoutes.js
-│   │   └── transformerRoutes.js
-│   ├── seedData.js              # Grid assets & smart meters seeder
-│   ├── seedUser.js              # Administrator account seeder
-│   ├── seedFieldEngineer.js     # Field Engineer account seeder
-│   ├── server.js                # Express & Socket.IO server entrypoint
-│   ├── .env                     # Backend environment configuration
-│   └── package.json             # Backend dependencies and scripts
+│   ├── models/
+│   ├── routes/
+│   ├── seedData.js
+│   ├── seedUser.js
+│   ├── seedFieldEngineer.js
+│   ├── server.js
+│   └── package.json
 │
-├── API_DOCUMENTATION.md         # Comprehensive REST API specifications
-├── TESTING.md                   # Full test plan, test cases & validation results
-└── README.md                    # Project documentation
+├── API_DOCUMENTATION.md
+├── DATABASE_SCHEMA.md
+├── TESTING.md
+├── USER_MANUAL.md
+├── FINAL_PROJECT_REPORT.md
+└── README.md
 ```
 
----
+*The tree shows the main application structure and documentation files. Individual controller, model, route, and page files are organized within their respective directories.*
 
-## ⚙️ Prerequisites
+##  Prerequisites
 
-Before running the application locally, ensure you have:
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
-- **MongoDB**: Access to a MongoDB Atlas cluster or a local MongoDB instance (`mongodb://localhost:27017/oms`)
+Before running the application locally, install:
 
----
+- **Node.js:** Version 18 or higher.
+- **npm:** Compatible with your installed Node.js version.
+- **MongoDB:** A MongoDB Atlas cluster or a local MongoDB instance.
+- **MapTiler API key:** Required if the configured map layer uses MapTiler.
 
-## 🚀 Installation & Setup
+##  Installation and Setup
 
-### 1. Clone the Repository
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/gautami-04/OMS.git
 cd OMS
 ```
 
-### 2. Backend Setup
+### 2. Configure the backend
+
+Open a terminal:
+
 ```bash
 cd server
 npm install
 ```
 
-Create or verify `server/.env`:
+Create a `server/.env` file and configure the required environment variables:
+
 ```env
 PORT=5000
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/oms
-JWT_SECRET=your_super_secret_jwt_key
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secure_jwt_secret
 ```
 
-Seed initial database users and grid topology:
+Use your own MongoDB connection string and a strong secret. Do not commit `.env` files or credentials to GitHub.
+
+### 3. Seed the database
+
+If you are setting up a fresh database, run the relevant seed scripts from the `server` directory:
+
 ```bash
 node seedUser.js
 node seedFieldEngineer.js
 node seedData.js
 ```
 
-Start the backend API server:
+Run each script as appropriate for your setup. Check the seed scripts before executing them against a database containing existing data.
+
+### 4. Start the backend
+
+From the `server` directory:
+
 ```bash
 npm start
-# Server will run at http://localhost:5000
 ```
 
-### 3. Frontend Setup
-Open a new terminal window:
+The backend is expected to run at:
+
+```text
+http://localhost:5000
+```
+
+### 5. Configure the frontend
+
+Open a second terminal:
+
 ```bash
 cd client
 npm install
 ```
 
-Create or verify `client/.env`:
+Create a `client/.env` file:
+
 ```env
-VITE_MAPTILER_KEY=your_maptiler_api_key
 VITE_API_URL=http://localhost:5000/api
+VITE_MAPTILER_KEY=your_maptiler_api_key
 ```
 
-Start the frontend development server:
+Use the environment variable names expected by the application configuration.
+
+### 6. Start the frontend
+
+From the `client` directory:
+
 ```bash
 npm run dev
-# Application will run at http://localhost:5173
 ```
 
----
+Open the local URL printed by Vite, typically:
 
-## 🔐 Default Credentials
+```text
+http://localhost:5173
+```
 
-| Role | Email | Password | Access Level |
-|---|---|---|---|
-| **Administrator** | `admin@oms.com` | `Admin@123` | Full access across all modules, including User Management |
-| **Field Engineer** | `engineer@oms.com` | `Engineer@123` | Operational access to grid map, outages, crew tickets, assets |
+Ensure the backend and MongoDB connection are running before testing application features.
 
----
+##  Main API Endpoints
 
-## 📡 Main API Endpoints Summary
+The following table summarizes the main API endpoints. Authentication requirements and supported operations should be checked against the current backend route definitions.
 
-| Method | Endpoint | Access | Purpose |
-|---|---|---|---|
-| `GET` | `/` | Public | System status and API health check |
-| `POST` | `/api/auth/login` | Public | Authenticate user & issue JWT token |
-| `GET` | `/api/auth/users` | Admin / Protected | List registered system users |
-| `GET` | `/api/substations` | Protected | Fetch grid substations |
-| `GET` | `/api/feeders` | Protected | Fetch feeder lines |
-| `GET` | `/api/transformers` | Protected | Fetch distribution transformers |
-| `GET` | `/api/consumers` | Protected | Fetch registered consumers |
-| `GET` | `/api/smart-meters` | Protected | Fetch smart meters and recorded electrical readings |
-| `POST` | `/api/smart-meters` | Protected | Register a new smart meter |
-| `PUT` | `/api/smart-meters/:id` | Protected | Update smart meter recorded readings / status |
-| `DELETE`| `/api/smart-meters/:id` | Protected | Delete smart meter |
-| `GET` | `/api/outages` | Protected | Fetch planned outage records |
-| `POST` | `/api/outages` | Protected | Create a new planned outage |
-| `PUT` | `/api/outages/:id` | Protected | Update outage state (`Scheduled` $\rightarrow$ `In Progress` $\rightarrow$ `Restored`) |
-| `DELETE`| `/api/outages/:id` | Protected | Delete planned outage |
-| `GET` | `/api/consumer-impact/:outageId` | Protected | Compute affected consumers, feeders, and transformers |
-| `GET` | `/api/reports/saidi` | Protected | Calculate SAIDI reliability metric |
-| `GET` | `/api/reports/saifi` | Protected | Calculate SAIFI reliability metric |
-| `GET` | `/api/tickets` | Protected | Fetch crew maintenance tickets |
-| `POST` | `/api/tickets` | Protected | Create maintenance ticket |
-| `PUT` | `/api/tickets/:id` | Protected | Update maintenance ticket |
-| `DELETE`| `/api/tickets/:id` | Protected | Delete maintenance ticket |
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/` | API health or status check |
+| `POST` | `/api/auth/login` | Authenticate a user |
+| `GET` | `/api/auth/users` | Retrieve system users |
+| `GET` | `/api/substations` | Retrieve substations |
+| `GET` | `/api/feeders` | Retrieve feeders |
+| `GET` | `/api/transformers` | Retrieve transformers |
+| `GET` | `/api/consumers` | Retrieve consumers |
+| `GET` | `/api/smart-meters` | Retrieve smart meter records |
+| `POST` | `/api/smart-meters` | Create a smart meter record |
+| `PUT` | `/api/smart-meters/:id` | Update a smart meter record |
+| `DELETE` | `/api/smart-meters/:id` | Delete a smart meter record |
+| `GET` | `/api/outages` | Retrieve outage records |
+| `POST` | `/api/outages` | Create an outage |
+| `PUT` | `/api/outages/:id` | Update an outage |
+| `DELETE` | `/api/outages/:id` | Delete an outage |
+| `GET` | `/api/consumer-impact/:outageId` | Retrieve calculated outage impact |
+| `GET` | `/api/reports/saidi` | Calculate SAIDI |
+| `GET` | `/api/reports/saifi` | Calculate SAIFI |
+| `GET` | `/api/tickets` | Retrieve maintenance tickets |
+| `POST` | `/api/tickets` | Create a maintenance ticket |
+| `PUT` | `/api/tickets/:id` | Update a maintenance ticket |
+| `DELETE` | `/api/tickets/:id` | Delete a maintenance ticket |
 
----
+For complete request formats, response examples, and implementation details, see [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md).
 
-## Out of Scope
+##  Testing and Verification
 
-The following capabilities are outside the scope of this project:
+Run the frontend lint checks:
 
-- SCADA integration
-- Physical AMI/smart-meter telemetry integration
-- AI/ML-based fault prediction
-- Mobile application
-- Weather analytics
-- Automated remote load shedding
-- Remote control of physical grid equipment
-
----
-
-## 🧪 Testing & Verification
-
-Run frontend linting:
 ```bash
 cd client
 npm run lint
 ```
 
-Run frontend production build:
+Run a production build:
+
 ```bash
-cd client
 npm run build
 ```
 
-*For complete test execution reports, test matrices, and edge-case results, see [`TESTING.md`](file:///c:/Users/gauti/Desktop/Smart-grid-oms/TESTING.md).*
+For the test plan, test cases, and recorded results, refer to [`TESTING.md`](TESTING.md).
+
+A successful build or lint check does not by itself confirm that every API, permission rule, or end-to-end workflow is working correctly. Verify the application against the current code and database before deployment or submission.
+
+##  Project Documentation
+
+- [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md) — REST API endpoints and usage.
+- [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) — MongoDB collections, fields, and relationships.
+- [`TESTING.md`](TESTING.md) — Test plan and recorded validation results.
+- [`USER_MANUAL.md`](USER_MANUAL.md) — Instructions for using the application.
+- [`FINAL_PROJECT_REPORT.md`](FINAL_PROJECT_REPORT.md) — Project background, implementation, and outcomes.
+
+##  Scope and Limitations
+
+This version focuses on application-level outage management and analysis. The following are outside the current scope:
+
+- Direct SCADA, RTU, or other hardware-protocol integration.
+- Live communication with physical smart meters or AMI infrastructure.
+- AI-based predictive fault forecasting.
+- Native Android or iOS applications.
+- Weather-based outage prediction and analytics.
+- Automated remote load-shedding or smart meter control.
+
+Reliability results depend on the quality and completeness of the available records. Socket.IO event broadcasting does not, by itself, guarantee that every screen automatically refreshes or stays synchronized.
+
+Authentication and role-based UI restrictions should not be treated as proof of server-side authorization on every endpoint. Backend route permissions should be reviewed and verified separately.
+
+##  Project Information
+
+**Project:** Smart Grid Outage Management System (OMS)  
+**Developer:** Gautami Chagantipati  
+**Repository:** [github.com/gautami-04/OMS](https://github.com/gautami-04/OMS)
+
+This project demonstrates the application of full-stack web development, GIS visualization, database modeling, outage workflow management, and reliability metric calculations to a power distribution management use case.
